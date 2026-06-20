@@ -9,6 +9,9 @@ dist/
 amplify_outputs*
 amplifyconfiguration*
 
+# capturas de pantalla temporales (generadas localmente)
+.shots/
+
 # logs
 *.log
 npm-debug.log*
