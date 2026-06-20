@@ -1,0 +1,456 @@
+:root {
+  --bg: #f5f6fa;
+  --card: #ffffff;
+  --ink: #1d2433;
+  --muted: #6b7280;
+  --line: #e5e7eb;
+  --brand: #2f6df0;
+  --brand-dark: #1f4fc0;
+  --ok: #16a34a;
+  --warn: #d97706;
+  --danger: #dc2626;
+  --radius: 12px;
+
+  /* Tema del Authenticator de Amplify */
+  --amplify-colors-brand-primary-80: var(--brand);
+  --amplify-colors-brand-primary-90: var(--brand-dark);
+  --amplify-colors-brand-primary-100: var(--brand-dark);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+}
+
+.full-center,
+.app-shell .content > .page:only-child:empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+}
+
+.auth-header {
+  text-align: center;
+  padding: 1.5rem 0 0.5rem;
+}
+.auth-header h1 {
+  color: var(--brand);
+  margin: 0;
+}
+.auth-header p {
+  color: var(--muted);
+  margin: 0.25rem 0 0;
+}
+
+/* ---------- Layout ---------- */
+.app-shell {
+  min-height: 100vh;
+}
+.topbar {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--card);
+  border-bottom: 1px solid var(--line);
+  padding: 0 1.5rem;
+  height: 60px;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-wrap: wrap;
+}
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--brand);
+}
+.brand-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--brand);
+}
+.topnav {
+  display: flex;
+  gap: 0.25rem;
+  flex: 1;
+}
+.topnav a {
+  color: var(--muted);
+  text-decoration: none;
+  padding: 0.4rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.92rem;
+}
+.topnav a:hover {
+  background: var(--bg);
+}
+.topnav a.active {
+  color: var(--brand);
+  background: #eaf1fe;
+  font-weight: 600;
+}
+.user-box {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.role-pill {
+  background: #eaf1fe;
+  color: var(--brand-dark);
+  border-radius: 999px;
+  padding: 0.15rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+.user-email {
+  font-size: 0.85rem;
+  color: var(--muted);
+  max-width: 160px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.content {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+.page h2 {
+  margin: 0 0 0.25rem;
+}
+.muted {
+  color: var(--muted);
+}
+.small {
+  font-size: 0.85rem;
+}
+
+/* ---------- Botones ---------- */
+.btn {
+  background: var(--brand);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+.btn:hover {
+  background: var(--brand-dark);
+}
+.btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-ghost {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.45rem 0.8rem;
+  font-size: 0.88rem;
+  cursor: pointer;
+  color: var(--ink);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.btn-ghost:hover {
+  background: var(--bg);
+}
+.btn-ghost.danger {
+  color: var(--danger);
+  border-color: #f3c7c7;
+}
+.btn-ghost.has-note {
+  color: var(--ok);
+  border-color: #bbe6c6;
+}
+
+/* ---------- Formularios ---------- */
+.inline-form {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+input,
+select,
+textarea {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.9rem;
+  font-family: inherit;
+  background: #fff;
+}
+input:focus,
+select:focus,
+textarea:focus {
+  outline: 2px solid #d6e3ff;
+  border-color: var(--brand);
+}
+.toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.import-box {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.2rem;
+}
+.hint {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+/* ---------- Tablas ---------- */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+.table th,
+.table td {
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.table th {
+  background: #fafbfc;
+  color: var(--muted);
+  font-weight: 600;
+}
+.table tr:last-child td {
+  border-bottom: none;
+}
+.table .right {
+  text-align: right;
+}
+.table .num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.table .strong {
+  font-weight: 700;
+}
+.table.compact th,
+.table.compact td {
+  padding: 0.45rem 0.7rem;
+}
+.barcell {
+  width: 120px;
+}
+.bar {
+  display: block;
+  height: 8px;
+  background: var(--brand);
+  border-radius: 4px;
+}
+
+/* ---------- Cards / stats ---------- */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem 1.2rem;
+  margin: 1rem 0;
+}
+.card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.card h3 {
+  margin: 0.2rem 0 0.6rem;
+}
+.stat-row {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin: 1rem 0;
+}
+.stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.8rem 1.2rem;
+  min-width: 120px;
+  display: flex;
+  flex-direction: column;
+}
+.stat-num {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: var(--brand);
+}
+.stat-label {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+/* ---------- Sorteo ---------- */
+.config-box {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin: 1rem 0;
+}
+.config-box input[type='number'] {
+  width: 70px;
+}
+.select-panel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 0.8rem 1rem;
+  margin: 1rem 0;
+}
+.select-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-top: 0.8rem;
+}
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.25rem 0.7rem;
+  font-size: 0.85rem;
+}
+.preview .actions {
+  display: flex;
+  gap: 0.6rem;
+  justify-content: flex-end;
+  margin-top: 0.8rem;
+}
+
+/* ---------- Mensajes ---------- */
+.msg {
+  padding: 0.6rem 0.9rem;
+  border-radius: 8px;
+  background: #eef2ff;
+  font-size: 0.9rem;
+}
+.msg.ok {
+  background: #e7f7ec;
+  color: #166534;
+}
+.msg.warn {
+  background: #fef3e2;
+  color: #92400e;
+}
+
+/* ---------- Coach: beneficiarios ---------- */
+.cards-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-top: 1rem;
+}
+.ben-card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+.ben-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.6rem;
+}
+.tag {
+  font-size: 0.72rem;
+  padding: 0.15rem 0.5rem;
+  border-radius: 999px;
+  background: var(--bg);
+  color: var(--muted);
+}
+.tag-ok {
+  background: #e7f7ec;
+  color: #166534;
+}
+.progress,
+.progress-bar {
+  height: 8px;
+  border-radius: 4px;
+}
+.progress {
+  background: var(--line);
+}
+.progress-bar {
+  background: var(--ok);
+}
+.ben-meta {
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-top: 0.4rem;
+}
+
+/* ---------- Coach: sesiones ---------- */
+.sesiones-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.sesion-item {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+}
+.sesion-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+.sesion-num {
+  font-weight: 600;
+  min-width: 80px;
+}
+.aprendizaje-box {
+  margin-top: 0.6rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.aprendizaje-box textarea {
+  width: 100%;
+  resize: vertical;
+}
+.aprendizaje-box .btn {
+  align-self: flex-start;
+}
