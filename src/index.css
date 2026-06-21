@@ -357,6 +357,20 @@ textarea:focus {
   margin-top: 0.8rem;
 }
 
+/* ---------- Semáforos ---------- */
+.semaforo {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
+}
+.semaforo-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
 /* ---------- Mensajes ---------- */
 .msg {
   padding: 0.6rem 0.9rem;

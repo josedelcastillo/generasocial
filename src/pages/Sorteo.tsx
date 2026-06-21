@@ -4,17 +4,25 @@ import {
   type Asignacion,
   type Beneficiario,
   type CoachProfile,
+  type Organizacion,
 } from '../amplifyClient';
 import { useApp } from '../context/AppData';
+import { FECHA_OBJETIVO_DEFECTO } from '../lib/metas';
 import { sortear, type CoachLoad, type Pairing } from '../lib/sorteo';
+
+/** Fecha de hoy en formato YYYY-MM-DD. */
+const hoyISO = () => new Date().toISOString().slice(0, 10);
 
 export function SorteoPage() {
   const { email } = useApp();
   const [coaches, setCoaches] = useState<CoachProfile[]>([]);
   const [beneficiarios, setBeneficiarios] = useState<Beneficiario[]>([]);
   const [asignaciones, setAsignaciones] = useState<Asignacion[]>([]);
+  const [orgs, setOrgs] = useState<Organizacion[]>([]);
   const [loading, setLoading] = useState(true);
 
+  const [orgId, setOrgId] = useState('');
+  const [fechaObjetivo, setFechaObjetivo] = useState(FECHA_OBJETIVO_DEFECTO);
   const [sesionesPorAsignacion, setSesiones] = useState(3);
   const [seleccion, setSeleccion] = useState<Record<string, boolean>>({});
   const [preview, setPreview] = useState<Pairing[] | null>(null);
@@ -23,14 +31,16 @@ export function SorteoPage() {
 
   async function load() {
     setLoading(true);
-    const [c, b, a] = await Promise.all([
+    const [c, b, a, o] = await Promise.all([
       client.models.CoachProfile.list(),
       client.models.Beneficiario.list(),
       client.models.Asignacion.list(),
+      client.models.Organizacion.list(),
     ]);
     setCoaches(c.data.filter((x) => x.activo !== false));
     setBeneficiarios(b.data.filter((x) => x.activo !== false));
     setAsignaciones(a.data);
+    setOrgs([...o.data].sort((x, y) => x.nombre.localeCompare(y.nombre)));
     setLoading(false);
   }
 
@@ -38,7 +48,6 @@ export function SorteoPage() {
     void load();
   }, []);
 
-  // Asignaciones activas por beneficiario y por coach.
   const activas = useMemo(
     () => asignaciones.filter((a) => a.estado === 'activa'),
     [asignaciones],
@@ -49,9 +58,15 @@ export function SorteoPage() {
     [activas],
   );
 
+  // Pendientes de la organización seleccionada.
   const pendientes = useMemo(
-    () => beneficiarios.filter((b) => !beneficiariosConCoach.has(b.id)),
-    [beneficiarios, beneficiariosConCoach],
+    () =>
+      beneficiarios.filter(
+        (b) =>
+          !beneficiariosConCoach.has(b.id) &&
+          (orgId ? b.organizacionId === orgId : false),
+      ),
+    [beneficiarios, beneficiariosConCoach, orgId],
   );
 
   const cargaCoach = useMemo(() => {
@@ -60,15 +75,14 @@ export function SorteoPage() {
     return m;
   }, [activas]);
 
-  // Por defecto, todos los pendientes quedan seleccionados.
+  // Por defecto, todos los pendientes de la org quedan seleccionados.
   useEffect(() => {
-    setSeleccion((prev) => {
-      const next = { ...prev };
-      pendientes.forEach((b) => {
-        if (next[b.id] === undefined) next[b.id] = true;
-      });
+    setSeleccion(() => {
+      const next: Record<string, boolean> = {};
+      pendientes.forEach((b) => (next[b.id] = true));
       return next;
     });
+    setPreview(null);
   }, [pendientes]);
 
   const seleccionados = pendientes.filter((b) => seleccion[b.id]);
@@ -85,12 +99,15 @@ export function SorteoPage() {
   }
 
   async function confirmar() {
-    if (!preview || preview.length === 0) return;
+    if (!preview || preview.length === 0 || !orgId || !fechaObjetivo) return;
     setGuardando(true);
     setResultado('');
+    const fechaAsignacion = hoyISO();
     try {
       const { data: sorteo } = await client.models.Sorteo.create({
         fecha: new Date().toISOString(),
+        organizacionId: orgId,
+        fechaObjetivo,
         sesionesPorAsignacion,
         cantidadAsignaciones: preview.length,
         ejecutadoPor: email,
@@ -100,12 +117,14 @@ export function SorteoPage() {
         const { data: asig } = await client.models.Asignacion.create({
           coachId: p.coachId,
           beneficiarioId: p.beneficiarioId,
+          organizacionId: orgId,
           sorteoId: sorteo?.id,
           sesionesPlaneadas: sesionesPorAsignacion,
+          fechaAsignacion,
+          fechaObjetivo,
           estado: 'activa',
         });
         if (!asig) continue;
-        // Generar las N sesiones "por agendar".
         for (let n = 1; n <= sesionesPorAsignacion; n++) {
           await client.models.Sesion.create({
             asignacionId: asig.id,
@@ -118,7 +137,7 @@ export function SorteoPage() {
       }
 
       setResultado(
-        `Sorteo realizado: ${preview.length} asignaciones, ${preview.length * sesionesPorAsignacion} sesiones creadas.`,
+        `Sorteo realizado: ${preview.length} asignaciones y ${preview.length * sesionesPorAsignacion} sesiones creadas, con meta ${fechaObjetivo}.`,
       );
       setPreview(null);
       await load();
@@ -132,32 +151,39 @@ export function SorteoPage() {
 
   if (loading) return <p className="page">Cargando…</p>;
 
+  const orgNombre = orgs.find((o) => o.id === orgId)?.nombre ?? '';
+
   return (
     <div className="page">
       <h2>Sorteo de asignaciones</h2>
       <p className="muted">
-        Asigna aleatoriamente los beneficiarios pendientes a los coaches,
-        priorizando a quienes no tienen beneficiarios en curso.
+        Elige una organización y una fecha objetivo. Se asignan aleatoriamente
+        sus beneficiarios pendientes a los coaches, priorizando a quienes no
+        tienen beneficiarios en curso.
       </p>
-
-      <div className="stat-row">
-        <div className="stat">
-          <span className="stat-num">{coaches.length}</span>
-          <span className="stat-label">coaches</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num">{pendientes.length}</span>
-          <span className="stat-label">beneficiarios pendientes</span>
-        </div>
-        <div className="stat">
-          <span className="stat-num">{seleccionados.length}</span>
-          <span className="stat-label">seleccionados</span>
-        </div>
-      </div>
 
       <div className="config-box">
         <label>
-          Sesiones a programar por beneficiario:&nbsp;
+          Organización:&nbsp;
+          <select value={orgId} onChange={(e) => setOrgId(e.target.value)}>
+            <option value="">— Elegir —</option>
+            {orgs.map((o) => (
+              <option key={o.id} value={o.id}>
+                {o.nombre}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Fecha objetivo (fin de sesiones):&nbsp;
+          <input
+            type="date"
+            value={fechaObjetivo}
+            onChange={(e) => setFechaObjetivo(e.target.value)}
+          />
+        </label>
+        <label>
+          Sesiones por beneficiario:&nbsp;
           <input
             type="number"
             min={1}
@@ -166,40 +192,76 @@ export function SorteoPage() {
             onChange={(e) => setSesiones(Math.max(1, Number(e.target.value)))}
           />
         </label>
-        <button
-          className="btn"
-          onClick={generarPreview}
-          disabled={seleccionados.length === 0 || coaches.length === 0}
-        >
-          Generar sorteo
-        </button>
       </div>
 
-      {coaches.length === 0 && (
-        <p className="msg warn">No hay coaches cargados todavía.</p>
-      )}
-
-      {pendientes.length > 0 && (
-        <details className="select-panel">
-          <summary>
-            Elegir beneficiarios a incluir ({seleccionados.length}/
-            {pendientes.length})
-          </summary>
-          <div className="chips">
-            {pendientes.map((b) => (
-              <label key={b.id} className="chip">
-                <input
-                  type="checkbox"
-                  checked={!!seleccion[b.id]}
-                  onChange={(e) =>
-                    setSeleccion((s) => ({ ...s, [b.id]: e.target.checked }))
-                  }
-                />
-                {b.nombre}
-              </label>
-            ))}
+      {!orgId ? (
+        <p className="msg">Selecciona una organización para comenzar.</p>
+      ) : (
+        <>
+          <div className="stat-row">
+            <div className="stat">
+              <span className="stat-num">{coaches.length}</span>
+              <span className="stat-label">coaches disponibles</span>
+            </div>
+            <div className="stat">
+              <span className="stat-num">{pendientes.length}</span>
+              <span className="stat-label">pendientes en {orgNombre}</span>
+            </div>
+            <div className="stat">
+              <span className="stat-num">{seleccionados.length}</span>
+              <span className="stat-label">seleccionados</span>
+            </div>
           </div>
-        </details>
+
+          <div className="config-box">
+            <button
+              className="btn"
+              onClick={generarPreview}
+              disabled={
+                seleccionados.length === 0 ||
+                coaches.length === 0 ||
+                !fechaObjetivo
+              }
+            >
+              Generar sorteo
+            </button>
+          </div>
+
+          {coaches.length === 0 && (
+            <p className="msg warn">No hay coaches cargados todavía.</p>
+          )}
+          {pendientes.length === 0 && (
+            <p className="msg">
+              No hay beneficiarios pendientes en esta organización.
+            </p>
+          )}
+
+          {pendientes.length > 0 && (
+            <details className="select-panel">
+              <summary>
+                Elegir beneficiarios a incluir ({seleccionados.length}/
+                {pendientes.length})
+              </summary>
+              <div className="chips">
+                {pendientes.map((b) => (
+                  <label key={b.id} className="chip">
+                    <input
+                      type="checkbox"
+                      checked={!!seleccion[b.id]}
+                      onChange={(e) =>
+                        setSeleccion((s) => ({
+                          ...s,
+                          [b.id]: e.target.checked,
+                        }))
+                      }
+                    />
+                    {b.nombre}
+                  </label>
+                ))}
+              </div>
+            </details>
+          )}
+        </>
       )}
 
       {preview && (
@@ -222,7 +284,11 @@ export function SorteoPage() {
             </tbody>
           </table>
           <div className="actions">
-            <button className="btn-ghost" onClick={generarPreview} disabled={guardando}>
+            <button
+              className="btn-ghost"
+              onClick={generarPreview}
+              disabled={guardando}
+            >
               Re-sortear
             </button>
             <button className="btn" onClick={confirmar} disabled={guardando}>

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { client, type CoachProfile } from '../amplifyClient';
-import { parseCsv, pick } from '../lib/csv';
+import { parseTabla, pick } from '../lib/csv';
 
 export function Coaches() {
   const [items, setItems] = useState<CoachProfile[]>([]);
@@ -43,12 +43,12 @@ export function Coaches() {
     void load();
   }
 
-  /** Importa CSV con columnas: nombre, email. */
+  /** Importa CSV/Excel con columnas: nombre, email. */
   async function importar(file: File) {
     setBusy(true);
     setMsg('Importando…');
     try {
-      const rows = await parseCsv(file);
+      const rows = await parseTabla(file);
       const existentes = new Set(
         items.map((c) => c.email.trim().toLowerCase()),
       );
@@ -104,11 +104,11 @@ export function Coaches() {
 
         <div className="import-box">
           <label className="btn-ghost">
-            Importar CSV
+            Importar CSV/Excel
             <input
               ref={fileRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls"
               hidden
               onChange={(e) => {
                 const f = e.target.files?.[0];

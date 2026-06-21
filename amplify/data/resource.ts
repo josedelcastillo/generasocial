@@ -58,6 +58,8 @@ const schema = a.schema({
   Sorteo: a
     .model({
       fecha: a.datetime().required(),
+      organizacionId: a.id(),
+      fechaObjetivo: a.date(),
       sesionesPorAsignacion: a.integer().required(),
       cantidadAsignaciones: a.integer(),
       ejecutadoPor: a.string(),
@@ -74,9 +76,12 @@ const schema = a.schema({
       coach: a.belongsTo('CoachProfile', 'coachId'),
       beneficiarioId: a.id().required(),
       beneficiario: a.belongsTo('Beneficiario', 'beneficiarioId'),
+      organizacionId: a.id(),
       sorteoId: a.id(),
       sorteo: a.belongsTo('Sorteo', 'sorteoId'),
       sesionesPlaneadas: a.integer().required(),
+      fechaAsignacion: a.date(),
+      fechaObjetivo: a.date(),
       estado: a.enum(['activa', 'finalizada']),
       sesiones: a.hasMany('Sesion', 'asignacionId'),
     })

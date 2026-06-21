@@ -4,7 +4,7 @@ import {
   type Beneficiario,
   type Organizacion,
 } from '../amplifyClient';
-import { parseCsv, pick } from '../lib/csv';
+import { parseTabla, pick } from '../lib/csv';
 
 export function Beneficiarios() {
   const [items, setItems] = useState<Beneficiario[]>([]);
@@ -54,12 +54,12 @@ export function Beneficiarios() {
     void load();
   }
 
-  /** Importa CSV con columnas: nombre, organizacion (opcional). Crea orgs faltantes. */
+  /** Importa CSV/Excel con columnas: nombre, organizacion (opcional). Crea orgs faltantes. */
   async function importar(file: File) {
     setBusy(true);
     setMsg('Importando…');
     try {
-      const rows = await parseCsv(file);
+      const rows = await parseTabla(file);
       // Mapa de organizaciones por nombre (en minúsculas) para reutilizar/crear.
       const orgMap = new Map<string, string>();
       orgs.forEach((o) => orgMap.set(o.nombre.trim().toLowerCase(), o.id));
@@ -130,11 +130,11 @@ export function Beneficiarios() {
 
         <div className="import-box">
           <label className="btn-ghost">
-            Importar CSV
+            Importar CSV/Excel
             <input
               ref={fileRef}
               type="file"
-              accept=".csv"
+              accept=".csv,.xlsx,.xls"
               hidden
               onChange={(e) => {
                 const f = e.target.files?.[0];

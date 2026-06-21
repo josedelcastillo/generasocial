@@ -76,13 +76,26 @@ A la escala del proyecto (~69 coaches, ~4 organizaciones, decenas de
 beneficiarios) el uso cae dentro del free tier permanente de Cognito, DynamoDB,
 AppSync, Lambda, S3 y CloudFront.
 
-## Importación CSV
+## Importación CSV / Excel
 
-Hay ejemplos en [`samples/`](./samples):
+El importador acepta `.csv` y `.xlsx`. Hay ejemplos en [`samples/`](./samples):
 
-- **Coaches** (`samples/coaches.csv`): columnas `nombre,email`.
-- **Beneficiarios** (`samples/beneficiarios.csv`): columnas `nombre,organizacion`
-  (la organización se crea sola si no existe).
+- **Coaches** (`samples/coaches.xlsx` / `.csv`): columnas `nombre`, `email`.
+- **Beneficiarios** (`samples/beneficiarios.xlsx` / `.csv`): columnas `nombre`,
+  `organizacion` (la organización se crea sola si no existe).
+
+## Metas y semáforos
+
+Cada **sorteo** se hace por organización y fija una **fecha objetivo** (fin de
+sesiones); en cada asignación se guarda la **fecha de asignación**. El dashboard
+muestra semáforos por organización comparando el tiempo transcurrido con el
+avance real:
+
+- 🟢 **En camino** · 🟡 **En riesgo** · 🔴 **Fuera de meta**
+
+Se calculan dos semáforos: **agendamiento** (sesiones agendadas o realizadas) y
+**sesiones efectuadas** (realizadas). Las asignaciones existentes sin meta se
+pueden completar con un clic a la fecha por defecto (**30/06/2026**).
 
 ## Estructura
 
