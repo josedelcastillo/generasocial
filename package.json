@@ -2,6 +2,10 @@
   "name": "generasocial",
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "pnpm": {
+    "onlyBuiltDependencies": ["esbuild"]
+  },
   "description": "Plataforma de gestión de coaching voluntario de Genera (sorteo, sesiones, aprendizajes y dashboard).",
   "scripts": {
     "dev": "vite",

@@ -41,18 +41,22 @@ con el `CoachProfile` cargado por la coordinación.
 
 ## Desarrollo local
 
-Requisitos: Node 18+ y credenciales de AWS configuradas (`aws configure`).
+Requisitos: Node 18+, [pnpm](https://pnpm.io) (`corepack enable`) y credenciales
+de AWS configuradas (`aws configure`).
 
 ```bash
-npm install
+pnpm install
 
 # Levanta un backend de pruebas (sandbox) en tu cuenta AWS.
 # Genera automáticamente amplify_outputs.json.
-npm run sandbox        # = npx ampx sandbox  (déjalo corriendo en una terminal)
+pnpm run sandbox       # = npx ampx sandbox  (déjalo corriendo en una terminal)
 
 # En otra terminal, la app web:
-npm run dev            # http://localhost:5173
+pnpm run dev           # http://localhost:5173
 ```
+
+> Este proyecto usa **pnpm** (fijado en `package.json` → `packageManager`). El
+> build de Amplify lo instala vía corepack, así que no necesitas configurarlo.
 
 > `amplify_outputs.json` lo genera Amplify y está en `.gitignore`. No se commitea.
 

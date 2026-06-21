@@ -3,18 +3,22 @@ backend:
   phases:
     build:
       commands:
-        - npm ci --cache .npm --prefer-offline
-        - npx ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
+        # pnpm vía corepack (versión fijada en "packageManager" de package.json).
+        - corepack enable
+        - corepack prepare pnpm@10.33.0 --activate
+        # Instalación reproducible (equivale a `npm ci`, pero sin el bug de npm
+        # que dejaba dependencias del CLI de Amplify fuera del lockfile).
+        - pnpm install --frozen-lockfile --prefer-offline
+        - pnpm exec ampx pipeline-deploy --branch $AWS_BRANCH --app-id $AWS_APP_ID
 frontend:
   phases:
     build:
       commands:
-        - npm run build
+        - pnpm run build
   artifacts:
     baseDirectory: dist
     files:
       - '**/*'
   cache:
     paths:
-      - .npm/**/*
       - node_modules/**/*
