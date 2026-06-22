@@ -17,6 +17,14 @@ import {
   SEMAFORO_LABEL,
   type Semaforo,
 } from '../lib/metas';
+import {
+  BarList,
+  Burnup,
+  Donut,
+  Gauge,
+  StackedBars,
+  STATE_COLORS,
+} from '../components/charts';
 
 interface Row {
   label: string;
@@ -267,6 +275,42 @@ export function Dashboard() {
     [asignaciones],
   );
 
+  // Carga de coaches: beneficiarios (asignaciones activas) por coach.
+  const cargaCoaches = useMemo(() => {
+    const m = new Map<string, number>();
+    asignaciones
+      .filter((a) => a.estado !== 'finalizada')
+      .forEach((a) => m.set(a.coachId, (m.get(a.coachId) ?? 0) + 1));
+    return [...m.entries()]
+      .map(([id, value]) => ({
+        label: coachMap.get(id) ?? 'Desconocido',
+        value,
+      }))
+      .sort((a, b) => b.value - a.value);
+  }, [asignaciones, coachMap]);
+
+  // Burn-up: sesiones realizadas acumuladas vs. fecha objetivo.
+  const burn = useMemo(() => {
+    const real = sesiones
+      .filter((s) => s.estado === 'realizada' && s.fecha)
+      .map((s) => s.fecha as string)
+      .sort();
+    const total = sesiones.length;
+    const starts = asignaciones
+      .map((a) => a.fechaAsignacion ?? FECHA_ASIGNACION_DEFECTO)
+      .sort();
+    const targets = asignaciones
+      .map((a) => a.fechaObjetivo ?? FECHA_OBJETIVO_DEFECTO)
+      .sort();
+    let cum = 0;
+    return {
+      start: starts[0] ?? FECHA_ASIGNACION_DEFECTO,
+      target: targets[targets.length - 1] ?? FECHA_OBJETIVO_DEFECTO,
+      total,
+      pts: real.map((d) => ({ d, y: ++cum })),
+    };
+  }, [sesiones, asignaciones]);
+
   async function backfillMetas() {
     setBackfilling(true);
     try {
@@ -301,6 +345,35 @@ export function Dashboard() {
 
   if (loading) return <p className="page">Cargando dashboard…</p>;
 
+  const donutSegments = [
+    {
+      label: 'Por agendar',
+      value: totales.por_agendar,
+      color: STATE_COLORS.por_agendar,
+    },
+    { label: 'Agendadas', value: totales.agendada, color: STATE_COLORS.agendada },
+    {
+      label: 'Realizadas',
+      value: totales.realizada,
+      color: STATE_COLORS.realizada,
+    },
+  ];
+
+  const stackedRows = porOrg.map((r) => ({
+    label: r.label,
+    segments: [
+      { value: r.porAgendar, color: STATE_COLORS.por_agendar },
+      { value: r.agendadas, color: STATE_COLORS.agendada },
+      { value: r.realizadas, color: STATE_COLORS.realizada },
+    ],
+  }));
+
+  const gauges = metas.map((m) => ({
+    label: m.org,
+    pct: m.total ? m.realizadas / m.total : 0,
+    color: SEMAFORO_COLOR[m.semEfectuadas],
+  }));
+
   return (
     <div className="page">
       <h2>Dashboard</h2>
@@ -323,6 +396,77 @@ export function Dashboard() {
           <span className="stat-label">{estadoLabel('realizada')}</span>
         </div>
       </div>
+
+      <section className="card">
+        <h3>Estado de sesiones</h3>
+        <div className="charts-2col">
+          <Donut segments={donutSegments} />
+          <div className="grow">
+            <h4 className="chart-sub">Por organización</h4>
+            <StackedBars rows={stackedRows} />
+            <div className="legend inline">
+              <span>
+                <span
+                  className="dot"
+                  style={{ background: STATE_COLORS.por_agendar }}
+                />
+                Por agendar
+              </span>
+              <span>
+                <span
+                  className="dot"
+                  style={{ background: STATE_COLORS.agendada }}
+                />
+                Agendadas
+              </span>
+              <span>
+                <span
+                  className="dot"
+                  style={{ background: STATE_COLORS.realizada }}
+                />
+                Realizadas
+              </span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="card">
+        <h3>Avance hacia la meta</h3>
+        <p className="muted small">
+          Sesiones realizadas acumuladas vs. el ritmo ideal para llegar a la
+          fecha objetivo.
+        </p>
+        <Burnup
+          start={burn.start}
+          target={burn.target}
+          total={burn.total}
+          pts={burn.pts}
+        />
+      </section>
+
+      <section className="card">
+        <h3>Carga de coaches</h3>
+        <p className="muted small">
+          Beneficiarios activos asignados a cada coach.
+        </p>
+        <div className="scroll-y">
+          <BarList items={cargaCoaches} />
+        </div>
+      </section>
+
+      <section className="card">
+        <h3>Cumplimiento por organización</h3>
+        <p className="muted small">
+          % de sesiones realizadas sobre el total, por organización.
+        </p>
+        <div className="gauges-grid">
+          {gauges.map((g) => (
+            <Gauge key={g.label} pct={g.pct} label={g.label} color={g.color} />
+          ))}
+          {gauges.length === 0 && <p className="muted">Sin datos todavía.</p>}
+        </div>
+      </section>
 
       <section className="card">
         <div className="card-head">

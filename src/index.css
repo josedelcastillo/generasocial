@@ -364,6 +364,208 @@ textarea:focus {
   margin-top: 0.8rem;
 }
 
+/* ---------- Gráficos ---------- */
+.charts-2col {
+  display: flex;
+  gap: 1.5rem;
+  align-items: flex-start;
+  flex-wrap: wrap;
+}
+.charts-2col .grow {
+  flex: 1;
+  min-width: 260px;
+}
+.chart-sub {
+  margin: 0 0 0.6rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+  font-weight: 600;
+}
+.donut {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+.donut-num {
+  font-size: 1.7rem;
+  font-weight: 700;
+  fill: var(--ink);
+}
+.donut-cap {
+  font-size: 0.7rem;
+  fill: var(--muted);
+}
+.legend {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  font-size: 0.85rem;
+  color: var(--ink);
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0.25rem 0;
+}
+.legend.inline {
+  display: flex;
+  gap: 1rem;
+  margin-top: 0.6rem;
+  flex-wrap: wrap;
+}
+.legend.inline span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.legend .dot,
+.legend.inline .dot {
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+/* barras apiladas */
+.stacked {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.stacked-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.stacked-label {
+  width: 150px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.stacked-track {
+  flex: 1;
+  display: flex;
+  height: 16px;
+  border-radius: 6px;
+  overflow: hidden;
+  background: #f1f3f7;
+}
+.stacked-seg {
+  height: 100%;
+}
+.stacked-total {
+  width: 34px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/* lista de barras */
+.barlist {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.barlist-row {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.barlist-label {
+  width: 150px;
+  font-size: 0.85rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.barlist-track {
+  flex: 1;
+  background: #f1f3f7;
+  border-radius: 6px;
+  height: 14px;
+}
+.barlist-fill {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+}
+.barlist-val {
+  width: 28px;
+  text-align: right;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.scroll-y {
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+/* gauges */
+.gauges-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+.gauge {
+  text-align: center;
+  width: 130px;
+}
+.gauge-num {
+  font-size: 1.05rem;
+  font-weight: 700;
+  fill: var(--ink);
+}
+.gauge-label {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-top: -0.3rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* burn-up */
+.burnup .axis {
+  font-size: 10px;
+  fill: var(--muted);
+}
+.burnup .axis.red {
+  fill: var(--danger);
+}
+.burnup-legend {
+  display: flex;
+  gap: 1.2rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-top: 0.5rem;
+}
+.burnup-legend .line {
+  display: inline-block;
+  width: 22px;
+  height: 0;
+  vertical-align: middle;
+  margin-right: 0.3rem;
+  border-top-width: 2px;
+  border-top-style: solid;
+}
+.burnup-legend .line.solid.green {
+  border-color: #16a34a;
+}
+.burnup-legend .line.dash.gray {
+  border-top-style: dashed;
+  border-color: #94a3b8;
+}
+.burnup-legend .line.dash.red {
+  border-top-style: dashed;
+  border-color: #dc2626;
+}
+
 /* ---------- Semáforos ---------- */
 .semaforo {
   display: inline-flex;
