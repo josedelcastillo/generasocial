@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   client,
   type Beneficiario,
@@ -14,6 +14,8 @@ export function Beneficiarios() {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
+  const [filtroOrg, setFiltroOrg] = useState('');
+  const [filtroNombre, setFiltroNombre] = useState('');
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function load() {
@@ -33,6 +35,16 @@ export function Beneficiarios() {
 
   const orgNombre = (id?: string | null) =>
     orgs.find((o) => o.id === id)?.nombre ?? '—';
+
+  // Lista filtrada por organización (desplegable) y por nombre (texto).
+  const visibles = useMemo(() => {
+    const q = filtroNombre.trim().toLowerCase();
+    return items.filter((b) => {
+      const okOrg = !filtroOrg || b.organizacionId === filtroOrg;
+      const okNombre = !q || b.nombre.toLowerCase().includes(q);
+      return okOrg && okNombre;
+    });
+  }, [items, filtroOrg, filtroNombre]);
 
   async function crear(e: React.FormEvent) {
     e.preventDefault();
@@ -148,6 +160,36 @@ export function Beneficiarios() {
 
       {msg && <p className="msg">{msg}</p>}
 
+      <div className="filtros">
+        <input
+          placeholder="Buscar por nombre…"
+          value={filtroNombre}
+          onChange={(e) => setFiltroNombre(e.target.value)}
+        />
+        <select value={filtroOrg} onChange={(e) => setFiltroOrg(e.target.value)}>
+          <option value="">Todas las organizaciones</option>
+          {orgs.map((o) => (
+            <option key={o.id} value={o.id}>
+              {o.nombre}
+            </option>
+          ))}
+        </select>
+        {(filtroNombre || filtroOrg) && (
+          <button
+            className="btn-ghost"
+            onClick={() => {
+              setFiltroNombre('');
+              setFiltroOrg('');
+            }}
+          >
+            Limpiar
+          </button>
+        )}
+        <span className="hint">
+          {visibles.length} de {items.length}
+        </span>
+      </div>
+
       {loading ? (
         <p>Cargando…</p>
       ) : (
@@ -160,7 +202,7 @@ export function Beneficiarios() {
             </tr>
           </thead>
           <tbody>
-            {items.map((b) => (
+            {visibles.map((b) => (
               <tr key={b.id}>
                 <td>{b.nombre}</td>
                 <td>{orgNombre(b.organizacionId)}</td>
@@ -174,10 +216,12 @@ export function Beneficiarios() {
                 </td>
               </tr>
             ))}
-            {items.length === 0 && (
+            {visibles.length === 0 && (
               <tr>
                 <td colSpan={3} className="muted">
-                  Aún no hay beneficiarios. Puedes importarlos por CSV.
+                  {items.length === 0
+                    ? 'Aún no hay beneficiarios. Puedes importarlos por CSV/Excel.'
+                    : 'No hay beneficiarios que coincidan con la búsqueda.'}
                 </td>
               </tr>
             )}
