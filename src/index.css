@@ -417,6 +417,11 @@ textarea:focus {
   background: #e7f7ec;
   color: #166534;
 }
+.tag-extra {
+  background: #eaf1fe;
+  color: var(--brand-dark);
+  margin-left: 0.4rem;
+}
 .progress,
 .progress-bar {
   height: 8px;

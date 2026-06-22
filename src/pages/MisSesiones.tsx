@@ -72,6 +72,15 @@ export function MisSesiones() {
     if (profile) await load(profile.id);
   }
 
+  async function eliminarSesion(sesion: Sesion) {
+    if (!confirm('¿Eliminar esta sesión adicional?')) return;
+    // Elimina primero el aprendizaje asociado (si existe) para no dejarlo huérfano.
+    const ap = aprendizajePorSesion.get(sesion.id);
+    if (ap) await client.models.Aprendizaje.delete({ id: ap.id });
+    await client.models.Sesion.delete({ id: sesion.id });
+    if (profile) await load(profile.id);
+  }
+
   async function guardarAprendizaje(sesion: Sesion, texto: string) {
     const existente = aprendizajePorSesion.get(sesion.id);
     if (existente) {
@@ -131,8 +140,10 @@ export function MisSesiones() {
                   key={s.id}
                   sesion={s}
                   aprendizaje={aprendizajePorSesion.get(s.id) ?? null}
+                  esAdicional={(s.numero ?? 0) > (asig.sesionesPlaneadas ?? 0)}
                   onUpdate={actualizarSesion}
                   onSaveAprendizaje={guardarAprendizaje}
+                  onDelete={eliminarSesion}
                 />
               ))}
             </div>
@@ -146,16 +157,20 @@ export function MisSesiones() {
 function SesionItem({
   sesion,
   aprendizaje,
+  esAdicional,
   onUpdate,
   onSaveAprendizaje,
+  onDelete,
 }: {
   sesion: Sesion;
   aprendizaje: Aprendizaje | null;
+  esAdicional: boolean;
   onUpdate: (
     id: string,
     cambios: { estado?: EstadoSesion; fecha?: string | null },
   ) => void;
   onSaveAprendizaje: (sesion: Sesion, texto: string) => void;
+  onDelete: (sesion: Sesion) => void;
 }) {
   const [fecha, setFecha] = useState(sesion.fecha ?? '');
   const [texto, setTexto] = useState(aprendizaje?.texto ?? '');
@@ -164,7 +179,10 @@ function SesionItem({
   return (
     <div className="sesion-item">
       <div className="sesion-row">
-        <span className="sesion-num">Sesión {sesion.numero ?? '—'}</span>
+        <span className="sesion-num">
+          Sesión {sesion.numero ?? '—'}
+          {esAdicional && <span className="tag tag-extra">adicional</span>}
+        </span>
         <input
           type="date"
           value={fecha}
@@ -191,6 +209,15 @@ function SesionItem({
         >
           {aprendizaje ? 'Aprendizaje ✓' : 'Aprendizaje'}
         </button>
+        {esAdicional && (
+          <button
+            className="btn-ghost danger"
+            onClick={() => onDelete(sesion)}
+            title="Eliminar sesión adicional"
+          >
+            Eliminar
+          </button>
+        )}
       </div>
       {abierto && (
         <div className="aprendizaje-box">
