@@ -20,6 +20,7 @@ import {
 
 interface Row {
   label: string;
+  org?: string;
   total: number;
   porAgendar: number;
   agendadas: number;
@@ -38,8 +39,17 @@ function Dot({ estado }: { estado: Semaforo }) {
   );
 }
 
-function Tabla({ titulo, rows }: { titulo: string; rows: Row[] }) {
+function Tabla({
+  titulo,
+  rows,
+  mostrarOrg = false,
+}: {
+  titulo: string;
+  rows: Row[];
+  mostrarOrg?: boolean;
+}) {
   const max = Math.max(1, ...rows.map((r) => r.total));
+  const colSpan = mostrarOrg ? 7 : 6;
   return (
     <section className="card">
       <h3>{titulo}</h3>
@@ -47,6 +57,7 @@ function Tabla({ titulo, rows }: { titulo: string; rows: Row[] }) {
         <thead>
           <tr>
             <th>{titulo}</th>
+            {mostrarOrg && <th>Organización</th>}
             <th>Por agendar</th>
             <th>Agendadas</th>
             <th>Realizadas</th>
@@ -58,6 +69,7 @@ function Tabla({ titulo, rows }: { titulo: string; rows: Row[] }) {
           {rows.map((r) => (
             <tr key={r.label}>
               <td>{r.label}</td>
+              {mostrarOrg && <td>{r.org ?? '—'}</td>}
               <td className="num">{r.porAgendar}</td>
               <td className="num">{r.agendadas}</td>
               <td className="num">{r.realizadas}</td>
@@ -72,7 +84,7 @@ function Tabla({ titulo, rows }: { titulo: string; rows: Row[] }) {
           ))}
           {rows.length === 0 && (
             <tr>
-              <td colSpan={6} className="muted">
+              <td colSpan={colSpan} className="muted">
                 Sin datos todavía.
               </td>
             </tr>
@@ -133,13 +145,17 @@ export function Dashboard() {
   );
   const orgMap = useMemo(() => new Map(orgs.map((o) => [o.id, o.nombre])), [orgs]);
 
-  function agrupar(keyFn: (s: Sesion) => string): Row[] {
+  function agrupar(
+    keyFn: (s: Sesion) => string,
+    orgFn?: (s: Sesion) => string,
+  ): Row[] {
     const m = new Map<string, Row>();
     for (const s of sesiones) {
       const label = keyFn(s);
       if (!m.has(label))
         m.set(label, {
           label,
+          org: orgFn ? orgFn(s) : undefined,
           total: 0,
           porAgendar: 0,
           agendadas: 0,
@@ -169,9 +185,16 @@ export function Dashboard() {
     [sesiones, coachMap],
   );
   const porCoachee = useMemo(
-    () => agrupar((s) => benMap.get(s.beneficiarioId)?.nombre ?? 'Desconocido'),
+    () =>
+      agrupar(
+        (s) => benMap.get(s.beneficiarioId)?.nombre ?? 'Desconocido',
+        (s) => {
+          const b = benMap.get(s.beneficiarioId);
+          return orgMap.get(b?.organizacionId ?? '') ?? 'Sin organización';
+        },
+      ),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [sesiones, benMap],
+    [sesiones, benMap, orgMap],
   );
 
   // Sesiones por asignación, para el cálculo de metas.
@@ -368,7 +391,7 @@ export function Dashboard() {
 
       <Tabla titulo="Sesiones por organización" rows={porOrg} />
       <Tabla titulo="Sesiones por coach" rows={porCoach} />
-      <Tabla titulo="Sesiones por coachee" rows={porCoachee} />
+      <Tabla titulo="Sesiones por coachee" rows={porCoachee} mostrarOrg />
     </div>
   );
 }
