@@ -1,0 +1,35 @@
+name: Semgrep
+
+# Análisis de seguridad estático (SAST) con Semgrep.
+# El token se toma del secret del repositorio SEMGREP_APP_TOKEN (no se hardcodea).
+on:
+  pull_request: {}
+  push:
+    branches:
+      - main
+      - master
+      - 'claude/**'
+  workflow_dispatch: {}
+  schedule:
+    # Escaneo semanal (lunes 06:00 UTC) para detectar nuevas reglas/hallazgos.
+    - cron: '0 6 * * 1'
+
+permissions:
+  contents: read
+
+jobs:
+  semgrep:
+    name: semgrep/ci
+    runs-on: ubuntu-latest
+    # Imagen oficial de Semgrep con el CLI preinstalado.
+    container:
+      image: semgrep/semgrep
+    # Evita correr en PRs abiertos por dependabot (no expone secrets).
+    if: (github.actor != 'dependabot[bot]')
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Semgrep CI
+        run: semgrep ci
+        env:
+          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
