@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>DevSecOps · El pipeline como red de seguridad</title>
+<style>
+  :root {
+    --ink: #0f172a;
+    --muted: #64748b;
+    --line: #e5e7eb;
+    --bad: #dc2626;
+    --bad-bg: #fef2f2;
+    --bad-soft: #fee2e2;
+    --good: #16a34a;
+    --good-bg: #f0fdf4;
+    --good-soft: #dcfce7;
+    --blue: #2f6df0;
+    --blue-bg: #eaf1fe;
+    --card: #ffffff;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Segoe UI', system-ui, -apple-system, "Helvetica Neue", sans-serif;
+    background: radial-gradient(1200px 600px at 50% -10%, #eef3fb 0%, #f6f8fb 55%);
+    color: var(--ink);
+    padding: 40px 24px 56px;
+  }
+  .wrap { max-width: 1300px; margin: 0 auto; }
+
+  .title {
+    text-align: center;
+    margin: 0 0 6px;
+    font-size: 34px;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+  .subtitle {
+    text-align: center;
+    color: var(--muted);
+    margin: 0 0 34px;
+    font-size: 17px;
+  }
+
+  .panel {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 22px;
+    padding: 26px 28px 30px;
+    margin-bottom: 26px;
+    box-shadow: 0 12px 34px rgba(15, 23, 42, 0.06);
+    position: relative;
+    overflow: hidden;
+  }
+  .panel::before {
+    content: "";
+    position: absolute;
+    left: 0; top: 0; bottom: 0;
+    width: 7px;
+  }
+  .panel.bad::before { background: linear-gradient(var(--bad), #f87171); }
+  .panel.good::before { background: linear-gradient(var(--good), #4ade80); }
+
+  .phead { display: flex; align-items: center; gap: 14px; margin-bottom: 22px; flex-wrap: wrap; }
+  .tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 700; font-size: 14px;
+    padding: 7px 14px; border-radius: 999px;
+    white-space: nowrap;
+  }
+  .tag.bad { background: var(--bad-bg); color: var(--bad); border: 1px solid var(--bad-soft); }
+  .tag.good { background: var(--good-bg); color: var(--good); border: 1px solid var(--good-soft); }
+  .phead h2 { margin: 0; font-size: 21px; font-weight: 700; }
+
+  /* Flujo */
+  .flow {
+    display: flex; align-items: stretch; flex-wrap: wrap;
+    gap: 4px; row-gap: 16px;
+  }
+  .chip {
+    display: flex; flex-direction: column; align-items: center; text-align: center;
+    width: 106px; padding: 11px 7px;
+    border: 1px solid var(--line); border-radius: 16px; background: #fff;
+    box-shadow: 0 4px 12px rgba(15, 23, 42, 0.04);
+  }
+  .chip .ico {
+    width: 44px; height: 44px; border-radius: 50%;
+    display: grid; place-items: center; font-size: 23px;
+    background: #f1f5f9; margin-bottom: 7px;
+  }
+  .chip .lbl { font-weight: 700; font-size: 13.5px; line-height: 1.2; }
+  .chip .lbl span { display: block; font-weight: 500; font-size: 11.5px; color: var(--muted); margin-top: 3px; }
+
+  .chip.blue { border-color: #bcd2fb; background: var(--blue-bg); }
+  .chip.blue .ico { background: #d6e4ff; }
+  .chip.good { border-color: var(--good-soft); background: var(--good-bg); }
+  .chip.good .ico { background: var(--good-soft); }
+  .chip.bad { border-color: var(--bad-soft); background: var(--bad-bg); }
+  .chip.bad .ico { background: var(--bad-soft); }
+
+  .arrow {
+    align-self: center; color: #cbd5e1; font-size: 23px; font-weight: 700;
+    padding: 0 1px; user-select: none;
+  }
+  .arrow.good { color: #86efac; }
+
+  /* Grupo de feedback (loop) */
+  .loop {
+    position: relative;
+    border: 2px dashed var(--blue); border-radius: 18px;
+    padding: 20px 10px 12px; margin-top: 6px;
+    background: rgba(47, 109, 240, 0.04);
+  }
+  .loop-cap {
+    position: absolute; top: -12px; left: 16px;
+    background: var(--blue); color: #fff;
+    font-size: 12px; font-weight: 700; letter-spacing: .01em;
+    padding: 3px 10px; border-radius: 999px;
+    box-shadow: 0 4px 10px rgba(47,109,240,.35);
+  }
+  .loop-inner { display: flex; align-items: center; gap: 6px; }
+
+  /* Badge final */
+  .end {
+    align-self: center; display: flex; flex-direction: column; align-items: center; text-align: center;
+    padding: 10px 14px; border-radius: 16px; font-weight: 800; font-size: 14px;
+    min-width: 118px;
+  }
+  .end.bad { background: var(--bad); color: #fff; box-shadow: 0 8px 20px rgba(220,38,38,.30); }
+  .end.good { background: var(--good); color: #fff; box-shadow: 0 8px 20px rgba(22,163,74,.30); }
+  .end .big { font-size: 26px; margin-bottom: 2px; }
+
+  .callout {
+    margin: 22px 0 0; padding: 14px 18px; border-radius: 14px;
+    font-size: 15px; line-height: 1.5;
+  }
+  .callout.bad { background: var(--bad-bg); color: #7f1d1d; border: 1px solid var(--bad-soft); }
+  .callout.good { background: var(--good-bg); color: #14532d; border: 1px solid var(--good-soft); }
+  .callout b { font-weight: 800; }
+
+  .foot { text-align: center; color: var(--muted); font-size: 13px; margin-top: 6px; }
+
+  @media (max-width: 720px) {
+    .flow { justify-content: center; }
+    .arrow { transform: rotate(90deg); }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1 class="title">La seguridad, ¿al final o en el camino?</h1>
+  <p class="subtitle">Dónde se detecta un problema cambia todo el costo de arreglarlo.</p>
+
+  <!-- ================= PANEL 1: SIN PIPELINE ================= -->
+  <section class="panel bad">
+    <div class="phead">
+      <span class="tag bad">❌ Sin pipeline de seguridad</span>
+      <h2>El problema aparece tarde</h2>
+    </div>
+
+    <div class="flow">
+      <div class="chip">
+        <div class="ico">👩‍💻</div>
+        <div class="lbl">Desarrollador<span>hace cambios</span></div>
+      </div>
+      <div class="arrow">›</div>
+      <div class="chip">
+        <div class="ico">⬆️</div>
+        <div class="lbl">Sube código</div>
+      </div>
+      <div class="arrow">›</div>
+      <div class="chip">
+        <div class="ico">🧩</div>
+        <div class="lbl">Dev<span>integración</span></div>
+      </div>
+      <div class="arrow">›</div>
+      <div class="chip">
+        <div class="ico">🧪</div>
+        <div class="lbl">Pruebas</div>
+      </div>
+      <div class="arrow">›</div>
+      <div class="chip">
+        <div class="ico">🔍</div>
+        <div class="lbl">QA</div>
+      </div>
+      <div class="arrow">›</div>
+      <div class="chip bad">
+        <div class="ico">🔒</div>
+        <div class="lbl">Seguridad</div>
+      </div>
+      <div class="arrow">›</div>
+      <div class="end bad">
+        <span class="big">💥</span>
+        ¡Salta el<br />problema!
+      </div>
+    </div>
+
+    <p class="callout bad">
+      💥 El problema se descubre <b>recién en las pruebas de seguridad</b>, después de
+      recorrer todo el proceso. Corregirlo tan tarde es <b>caro, lento</b> y frena la entrega.
+    </p>
+  </section>
+
+  <!-- ================= PANEL 2: CON PIPELINE ================= -->
+  <section class="panel good">
+    <div class="phead">
+      <span class="tag good">✅ Con pipeline DevSecOps</span>
+      <h2>El pipeline corrige a tiempo</h2>
+    </div>
+
+    <div class="flow">
+      <div class="chip">
+        <div class="ico">👩‍💻</div>
+        <div class="lbl">Desarrollador<span>hace cambios</span></div>
+      </div>
+      <div class="arrow">›</div>
+
+      <div class="loop">
+        <span class="loop-cap">⟲ feedback: obliga a corregir</span>
+        <div class="loop-inner">
+          <div class="chip">
+            <div class="ico">⬆️</div>
+            <div class="lbl">Sube código</div>
+          </div>
+          <div class="arrow">›</div>
+          <div class="chip blue">
+            <div class="ico">🤖</div>
+            <div class="lbl">Pipeline<span>revisa al instante</span></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="arrow good">›</div>
+      <div class="chip good">
+        <div class="ico">🧩</div>
+        <div class="lbl">Dev<span>integración</span></div>
+      </div>
+      <div class="arrow good">›</div>
+      <div class="chip good">
+        <div class="ico">🧪</div>
+        <div class="lbl">Pruebas</div>
+      </div>
+      <div class="arrow good">›</div>
+      <div class="chip good">
+        <div class="ico">🔍</div>
+        <div class="lbl">QA</div>
+      </div>
+      <div class="arrow good">›</div>
+      <div class="chip good">
+        <div class="ico">🔒</div>
+        <div class="lbl">Seguridad</div>
+      </div>
+      <div class="arrow good">›</div>
+      <div class="end good">
+        <span class="big">🎉</span>
+        Todo<br />limpio
+      </div>
+    </div>
+
+    <p class="callout good">
+      ✅ Al subir el código, el pipeline lo <b>revisa al instante y obliga a corregir</b>
+      antes de avanzar. El resto del flujo —Dev, pruebas, QA y seguridad— llega
+      <b>limpio, sin sorpresas</b>. Esto es <b>“shift-left”</b>: mover la seguridad al inicio.
+    </p>
+  </section>
+
+  <p class="foot">Cuanto antes se detecta un problema, más barato y rápido es corregirlo.</p>
+</div>
+</body>
+</html>
