@@ -29,11 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Semgrep CI
-        # Reglas propias de la demo (./semgrep-rules) + reglas de la comunidad
-        # (p/default). El token conecta los hallazgos al panel de Semgrep.
-        # Para una demo SIN token, reemplaza esta línea por:
-        #   semgrep scan --config ./semgrep-rules --config "p/default" --error
-        run: semgrep ci --config ./semgrep-rules --config "p/default"
-        env:
-          SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
+      - name: Semgrep scan
+        # Escaneo determinista con nuestras reglas. `--error` hace que el
+        # pipeline FALLE (exit 1) si hay hallazgos: esa es la compuerta de
+        # seguridad de la demo. No se usa `semgrep ci` porque, estando
+        # "logueado" con el token, rechaza `--config` y usaría solo la política
+        # configurada en la nube de Semgrep (dejando pasar el secreto).
+        run: semgrep scan --config ./semgrep-rules --error
