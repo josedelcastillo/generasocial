@@ -1,7 +1,9 @@
 name: Semgrep
 
 # Análisis de seguridad estático (SAST) con Semgrep.
-# El token se toma del secret del repositorio SEMGREP_APP_TOKEN (no se hardcodea).
+# - Escanea con nuestras reglas (semgrep-rules/).
+# - Comenta el detalle de los hallazgos en el Pull Request.
+# - Falla (check en rojo) si encuentra algún problema.
 on:
   pull_request: {}
   push:
@@ -11,28 +13,68 @@ on:
       - 'claude/**'
   workflow_dispatch: {}
   schedule:
-    # Escaneo semanal (lunes 06:00 UTC) para detectar nuevas reglas/hallazgos.
+    # Escaneo semanal (lunes 06:00 UTC).
     - cron: '0 6 * * 1'
 
 permissions:
   contents: read
+  pull-requests: write # necesario para comentar en el PR
 
 jobs:
   semgrep:
     name: semgrep/ci
     runs-on: ubuntu-latest
-    # Imagen oficial de Semgrep con el CLI preinstalado.
-    container:
-      image: semgrep/semgrep
-    # Evita correr en PRs abiertos por dependabot (no expone secrets).
     if: (github.actor != 'dependabot[bot]')
     steps:
       - uses: actions/checkout@v4
 
-      - name: Semgrep scan
-        # Escaneo determinista con nuestras reglas. `--error` hace que el
-        # pipeline FALLE (exit 1) si hay hallazgos: esa es la compuerta de
-        # seguridad. No se usa `semgrep ci` porque, estando "logueado" con el
-        # token, rechaza `--config` y usaría solo la política de la nube de
-        # Semgrep (dejando pasar el secreto). No requiere token.
-        run: semgrep scan --config ./semgrep-rules --error
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Instalar Semgrep
+        run: pip install --quiet semgrep
+
+      - name: Ejecutar Semgrep
+        # Genera el JSON de resultados. No usamos --error aquí para poder
+        # comentar en el PR antes de fallar; el corte lo hace el último paso.
+        run: semgrep scan --config ./semgrep-rules --json --output semgrep.json || true
+
+      - name: Construir reporte
+        run: |
+          python3 .github/scripts/semgrep_report.py semgrep.json | tee report.md
+
+      - name: Comentar en el PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('report.md', 'utf8');
+            const marker = '<!-- semgrep-report -->';
+            const { owner, repo } = context.repo;
+            const issue_number = context.issue.number;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner, repo, issue_number, per_page: 100,
+            });
+            const previo = comments.find(
+              (c) => c.body && c.body.includes(marker),
+            );
+            if (previo) {
+              await github.rest.issues.updateComment({
+                owner, repo, comment_id: previo.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner, repo, issue_number, body,
+              });
+            }
+
+      - name: Fallar si hay hallazgos
+        run: |
+          count=$(jq '.results | length' semgrep.json 2>/dev/null || echo 0)
+          echo "Hallazgos de seguridad: $count"
+          if [ "$count" != "0" ]; then
+            echo "::error::Semgrep encontró $count problema(s) de seguridad. Revisa el comentario del PR."
+            exit 1
+          fi
