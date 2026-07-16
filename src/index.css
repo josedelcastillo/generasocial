@@ -136,6 +136,16 @@ body {
   color: var(--muted);
   font-size: 0.85rem;
 }
+.appversion {
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  background: #eaf1fe;
+  color: var(--brand-dark);
+  font-size: 0.75rem;
+  font-weight: 600;
+}
 .page h2 {
   margin: 0 0 0.25rem;
 }

@@ -54,6 +54,7 @@ export function Layout({ children }: { children: ReactNode }) {
       <footer className="appfooter">
         Hecho con 💙 para <strong>Genera</strong> · acompañando a quienes
         acompañan
+        <span className="appversion">v1.1</span>
       </footer>
     </div>
   );
