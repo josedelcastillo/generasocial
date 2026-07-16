@@ -17,14 +17,14 @@ proceso, automatizada, en vez de descubrir el problema tarde.
 
 ## Antes de la clase (una sola vez)
 
-1. En GitHub → **Settings → Secrets and variables → Actions**, crear el secret
-   `SEMGREP_APP_TOKEN` con tu token de Semgrep.
-2. Verifica que el workflow **Semgrep** aparezca en la pestaña *Actions*.
+1. Verifica que el workflow **Semgrep** aparezca en la pestaña *Actions*.
+2. (Opcional pero recomendado) En GitHub → **Settings → Branches**, protege la
+   rama `main` con *Require status checks to pass* → marca **semgrep/ci**. Así el
+   PR vulnerable queda **bloqueado** (no se puede mergear), no solo en rojo.
 
-> ¿Demo sin token? En `.github/workflows/semgrep.yml` cambia la línea
-> `semgrep ci ...` por:
-> `semgrep scan --config ./semgrep-rules --config "p/default" --error`
-> (no necesita token ni cuenta).
+> El pipeline corre `semgrep scan --config ./semgrep-rules --error`, que **no
+> necesita token ni cuenta de Semgrep**: funciona igual en cualquier fork. El
+> `--error` hace que el pipeline falle si encuentra algún secreto.
 
 ---
 

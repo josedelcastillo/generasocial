@@ -1,0 +1,34 @@
+name: SonarCloud
+
+# Análisis de calidad y seguridad con SonarCloud.
+# Requiere el secret SONAR_TOKEN (SonarCloud → My Account → Security → Generate).
+# Importante: en SonarCloud debe estar DESACTIVADO "Automatic Analysis"
+# (Administration → Analysis Method), de lo contrario el análisis por CI falla.
+on:
+  push:
+    branches:
+      - main
+      - master
+      - 'claude/**'
+  pull_request: {}
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  sonarcloud:
+    name: SonarCloud
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Historial completo: necesario para detectar "código nuevo" y
+          # decorar correctamente los Pull Requests.
+          fetch-depth: 0
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v8
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
