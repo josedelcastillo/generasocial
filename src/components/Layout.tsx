@@ -51,6 +51,10 @@ export function Layout({ children }: { children: ReactNode }) {
         </div>
       </header>
       <main className="content">{children}</main>
+      <footer className="appfooter">
+        Hecho con 💙 para <strong>Genera</strong> · acompañando a quienes
+        acompañan
+      </footer>
     </div>
   );
 }
