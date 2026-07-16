@@ -1,5 +1,8 @@
 # Genera Social
 
+[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=josedelcastillo_generasocial&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=josedelcastillo_generasocial)
+[![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=josedelcastillo_generasocial&metric=security_rating)](https://sonarcloud.io/summary/new_code?id=josedelcastillo_generasocial)
+
 Plataforma para gestionar el frente social de **Genera** (escuela de coaching
 ontológico): asignación aleatoria de coaches voluntarios a beneficiarios,
 registro de sesiones y aprendizajes, y un dashboard de seguimiento.
