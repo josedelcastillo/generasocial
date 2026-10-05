@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import {
   client,
   estadoLabel,
+  listAll,
   type Asignacion,
   type Beneficiario,
   type CoachProfile,
@@ -125,17 +126,17 @@ export function Dashboard() {
 
   async function load() {
     const [s, b, c, o, a] = await Promise.all([
-      client.models.Sesion.list(),
-      client.models.Beneficiario.list(),
-      client.models.CoachProfile.list(),
-      client.models.Organizacion.list(),
-      client.models.Asignacion.list(),
+      listAll((nextToken) => client.models.Sesion.list({ nextToken })),
+      listAll((nextToken) => client.models.Beneficiario.list({ nextToken })),
+      listAll((nextToken) => client.models.CoachProfile.list({ nextToken })),
+      listAll((nextToken) => client.models.Organizacion.list({ nextToken })),
+      listAll((nextToken) => client.models.Asignacion.list({ nextToken })),
     ]);
-    setSesiones(s.data);
-    setBeneficiarios(b.data);
-    setCoaches(c.data);
-    setOrgs(o.data);
-    setAsignaciones(a.data);
+    setSesiones(s);
+    setBeneficiarios(b);
+    setCoaches(c);
+    setOrgs(o);
+    setAsignaciones(a);
     setLoading(false);
   }
 
@@ -229,7 +230,10 @@ export function Dashboard() {
     const m = new Map<string, Acc>();
     for (const a of asignaciones) {
       if (a.estado === 'finalizada') continue;
-      const orgNombre = orgMap.get(a.organizacionId ?? '') ?? 'Sin organización';
+      // Asignaciones sin organizacionId (datos previos): org del beneficiario.
+      const orgId =
+        a.organizacionId ?? benMap.get(a.beneficiarioId)?.organizacionId ?? '';
+      const orgNombre = orgMap.get(orgId) ?? 'Sin organización';
       const ses = sesionesPorAsig.get(a.id) ?? [];
       const desde = a.fechaAsignacion ?? FECHA_ASIGNACION_DEFECTO;
       const objetivo = a.fechaObjetivo ?? FECHA_OBJETIVO_DEFECTO;
@@ -268,7 +272,7 @@ export function Dashboard() {
         };
       })
       .sort((a, b) => a.org.localeCompare(b.org));
-  }, [asignaciones, sesionesPorAsig, orgMap]);
+  }, [asignaciones, sesionesPorAsig, orgMap, benMap]);
 
   const sinMeta = useMemo(
     () => asignaciones.filter((a) => !a.fechaObjetivo).length,

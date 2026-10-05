@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   client,
+  listAll,
   type Beneficiario,
   type Organizacion,
 } from '../amplifyClient';
@@ -21,11 +22,11 @@ export function Beneficiarios() {
   async function load() {
     setLoading(true);
     const [b, o] = await Promise.all([
-      client.models.Beneficiario.list(),
-      client.models.Organizacion.list(),
+      listAll((nextToken) => client.models.Beneficiario.list({ nextToken })),
+      listAll((nextToken) => client.models.Organizacion.list({ nextToken })),
     ]);
-    setItems([...b.data].sort((a, x) => a.nombre.localeCompare(x.nombre)));
-    setOrgs([...o.data].sort((a, x) => a.nombre.localeCompare(x.nombre)));
+    setItems([...b].sort((a, x) => a.nombre.localeCompare(x.nombre)));
+    setOrgs([...o].sort((a, x) => a.nombre.localeCompare(x.nombre)));
     setLoading(false);
   }
 

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   client,
+  listAll,
   type Asignacion,
   type Beneficiario,
   type Sesion,
@@ -23,15 +24,23 @@ export function MisAsignaciones() {
     void (async () => {
       setLoading(true);
       const [a, b, s] = await Promise.all([
-        client.models.Asignacion.list({
-          filter: { coachId: { eq: profile.id } },
-        }),
-        client.models.Beneficiario.list(),
-        client.models.Sesion.list({ filter: { coachId: { eq: profile.id } } }),
+        listAll((nextToken) =>
+          client.models.Asignacion.list({
+            filter: { coachId: { eq: profile.id } },
+            nextToken,
+          }),
+        ),
+        listAll((nextToken) => client.models.Beneficiario.list({ nextToken })),
+        listAll((nextToken) =>
+          client.models.Sesion.list({
+            filter: { coachId: { eq: profile.id } },
+            nextToken,
+          }),
+        ),
       ]);
-      setAsignaciones(a.data);
-      setBeneficiarios(b.data);
-      setSesiones(s.data);
+      setAsignaciones(a);
+      setBeneficiarios(b);
+      setSesiones(s);
       setLoading(false);
     })();
   }, [profile]);

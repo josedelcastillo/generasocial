@@ -7,7 +7,7 @@ import {
 } from 'react';
 import { fetchAuthSession } from 'aws-amplify/auth';
 import { useAuthenticator } from '@aws-amplify/ui-react';
-import { client, type CoachProfile } from '../amplifyClient';
+import { client, listAll, type CoachProfile } from '../amplifyClient';
 
 interface AppData {
   email: string;
@@ -50,9 +50,12 @@ export function AppDataProvider({ children }: { children: ReactNode }) {
       setEmail(mail);
 
       if (mail) {
-        const { data } = await client.models.CoachProfile.list({
-          filter: { email: { eq: mail } },
-        });
+        const data = await listAll((nextToken) =>
+          client.models.CoachProfile.list({
+            filter: { email: { eq: mail } },
+            nextToken,
+          }),
+        );
         setProfile(data[0] ?? null);
       } else {
         setProfile(null);
