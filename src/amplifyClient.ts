@@ -7,6 +7,26 @@ import type { Schema } from '../amplify/data/resource';
  */
 export const client = generateClient<Schema>();
 
+/**
+ * Recorre todas las páginas de un list(). AppSync devuelve como máximo
+ * 100 ítems por llamada, así que un list() simple trunca los resultados.
+ */
+export async function listAll<T>(
+  fetchPage: (nextToken?: string | null) => Promise<{
+    data: T[];
+    nextToken?: string | null;
+  }>,
+): Promise<T[]> {
+  const items: T[] = [];
+  let nextToken: string | null | undefined;
+  do {
+    const page = await fetchPage(nextToken);
+    items.push(...page.data);
+    nextToken = page.nextToken;
+  } while (nextToken);
+  return items;
+}
+
 // Tipos derivados del esquema, reutilizables en los componentes.
 export type Organizacion = Schema['Organizacion']['type'];
 export type Beneficiario = Schema['Beneficiario']['type'];

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   client,
+  listAll,
   type Asignacion,
   type Beneficiario,
   type CoachProfile,
@@ -32,15 +33,15 @@ export function SorteoPage() {
   async function load() {
     setLoading(true);
     const [c, b, a, o] = await Promise.all([
-      client.models.CoachProfile.list(),
-      client.models.Beneficiario.list(),
-      client.models.Asignacion.list(),
-      client.models.Organizacion.list(),
+      listAll((nextToken) => client.models.CoachProfile.list({ nextToken })),
+      listAll((nextToken) => client.models.Beneficiario.list({ nextToken })),
+      listAll((nextToken) => client.models.Asignacion.list({ nextToken })),
+      listAll((nextToken) => client.models.Organizacion.list({ nextToken })),
     ]);
-    setCoaches(c.data.filter((x) => x.activo !== false));
-    setBeneficiarios(b.data.filter((x) => x.activo !== false));
-    setAsignaciones(a.data);
-    setOrgs([...o.data].sort((x, y) => x.nombre.localeCompare(y.nombre)));
+    setCoaches(c.filter((x) => x.activo !== false));
+    setBeneficiarios(b.filter((x) => x.activo !== false));
+    setAsignaciones(a);
+    setOrgs([...o].sort((x, y) => x.nombre.localeCompare(y.nombre)));
     setLoading(false);
   }
 

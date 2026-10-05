@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import {
   client,
+  listAll,
   ESTADOS_SESION,
   type Aprendizaje,
   type Asignacion,
@@ -21,15 +22,26 @@ export function MisSesiones() {
   async function load(coachId: string) {
     setLoading(true);
     const [a, b, s, ap] = await Promise.all([
-      client.models.Asignacion.list({ filter: { coachId: { eq: coachId } } }),
-      client.models.Beneficiario.list(),
-      client.models.Sesion.list({ filter: { coachId: { eq: coachId } } }),
-      client.models.Aprendizaje.list(), // owner-based: sólo devuelve los míos
+      listAll((nextToken) =>
+        client.models.Asignacion.list({
+          filter: { coachId: { eq: coachId } },
+          nextToken,
+        }),
+      ),
+      listAll((nextToken) => client.models.Beneficiario.list({ nextToken })),
+      listAll((nextToken) =>
+        client.models.Sesion.list({
+          filter: { coachId: { eq: coachId } },
+          nextToken,
+        }),
+      ),
+      // owner-based: sólo devuelve los míos
+      listAll((nextToken) => client.models.Aprendizaje.list({ nextToken })),
     ]);
-    setAsignaciones(a.data);
-    setBeneficiarios(b.data);
-    setSesiones(s.data);
-    setAprendizajes(ap.data);
+    setAsignaciones(a);
+    setBeneficiarios(b);
+    setSesiones(s);
+    setAprendizajes(ap);
     setLoading(false);
   }
 

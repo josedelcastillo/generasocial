@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { client, type CoachProfile } from '../amplifyClient';
+import { client, listAll, type CoachProfile } from '../amplifyClient';
 import { parseTabla, pick } from '../lib/csv';
 
 export function Coaches() {
@@ -13,7 +13,9 @@ export function Coaches() {
 
   async function load() {
     setLoading(true);
-    const { data } = await client.models.CoachProfile.list();
+    const data = await listAll((nextToken) =>
+      client.models.CoachProfile.list({ nextToken }),
+    );
     setItems([...data].sort((a, b) => a.nombre.localeCompare(b.nombre)));
     setLoading(false);
   }

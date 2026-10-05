@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { client, type Organizacion } from '../amplifyClient';
+import { client, listAll, type Organizacion } from '../amplifyClient';
 
 export function Organizaciones() {
   const [items, setItems] = useState<Organizacion[]>([]);
@@ -9,7 +9,9 @@ export function Organizaciones() {
 
   async function load() {
     setLoading(true);
-    const { data } = await client.models.Organizacion.list();
+    const data = await listAll((nextToken) =>
+      client.models.Organizacion.list({ nextToken }),
+    );
     setItems([...data].sort((a, b) => a.nombre.localeCompare(b.nombre)));
     setLoading(false);
   }
